@@ -1,8 +1,11 @@
 package rewards;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
 
@@ -10,6 +13,7 @@ import javax.sql.DataSource;
  *          beans are members of the "local" profile.
  */
 @Configuration
+@Profile("local")
 public class TestInfrastructureLocalConfig {
 
 	/**

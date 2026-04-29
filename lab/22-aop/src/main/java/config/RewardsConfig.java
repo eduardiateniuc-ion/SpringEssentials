@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.context.annotation.Import;
 import rewards.RewardNetwork;
 import rewards.internal.RewardNetworkImpl;
 import rewards.internal.account.AccountRepository;
@@ -18,7 +19,7 @@ import rewards.internal.reward.RewardRepository;
 @Configuration
 public class RewardsConfig {
 
-	@Autowired
+    @Autowired
 	DataSource dataSource;
 		
 	@Bean

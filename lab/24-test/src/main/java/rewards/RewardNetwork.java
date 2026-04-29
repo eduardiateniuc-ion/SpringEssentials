@@ -1,5 +1,7 @@
 package rewards;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 /**
  * Rewards a member account for dining at a restaurant.
  * 
@@ -13,6 +15,8 @@ package rewards;
  * This is the central application-boundary for the "rewards" application. This is the public interface users call to
  * invoke the application. This is the entry-point into the Application Layer.
  */
+
+
 public interface RewardNetwork {
 
 	/**
@@ -24,5 +28,6 @@ public interface RewardNetwork {
 	 * @param dining a charge made to a credit card for dining at a restaurant
 	 * @return confirmation of the reward
 	 */
+
 	public RewardConfirmation rewardAccountFor(Dining dining);
 }
