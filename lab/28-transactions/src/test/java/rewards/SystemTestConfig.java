@@ -2,9 +2,11 @@ package rewards;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 
 import config.RewardsConfig;
@@ -14,11 +16,12 @@ import config.RewardsConfig;
 @Import(RewardsConfig.class)
 public class SystemTestConfig {
 
-	
-	/**
-	 * Creates an in-memory "rewards" database populated 
-	 * with test data for fast testing
-	 */
+    @Bean
+    public DataSourceTransactionManager transactionManager() {
+        DataSourceTransactionManager txManager = new DataSourceTransactionManager();
+        txManager.setDataSource(dataSource());
+        return txManager;
+    }
 	@Bean
 	public DataSource dataSource(){
 		return
