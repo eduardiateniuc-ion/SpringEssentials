@@ -31,7 +31,7 @@ import java.util.Set;
 public class Account {
 
 	@Id
-	@Column(name = "ID")
+	@Column(name = "id")
 	private Long entityId;
 
 	// No need for @Column, mapped automatically to NUMBER
@@ -44,10 +44,12 @@ public class Account {
 	@JoinColumn(name = "ACCOUNT_ID")
 	private Set<Beneficiary> beneficiaries = new HashSet<Beneficiary>();
 
-	@Column(name = "CREDIT_CARD")
-	private String creditCardNumber;
 
-	public Account() {
+    @Column(name="CREDIT_CARD")
+    private String creditCardNumber;
+
+
+    public Account() {
 	}
 
 	/**
@@ -66,20 +68,15 @@ public class Account {
 	 * 
 	 * @return the credit card number for this account as a 16-character String.
 	 */
-	public String getCreditCardNumber() {
-		return creditCardNumber;
-	}
+    public String getCreditCardNumber() {
+        return creditCardNumber;
+    }
 
-	/**
-	 * Setter for the credit card number for this account.
-	 * 
-	 * @param creditCardNumber
-	 */
-	public void setCreditCardNumber(String creditCardNumber) {
-		this.creditCardNumber = creditCardNumber;
-	}
+    public void setCreditCardNumber(String creditCardNumber) {
+        this.creditCardNumber = creditCardNumber;
+    }
 
-	/**
+    /**
 	 * Returns the number used to uniquely identify this account.
 	 */
 	public String getNumber() {

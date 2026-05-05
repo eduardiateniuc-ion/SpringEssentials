@@ -7,6 +7,8 @@ import rewards.RewardConfirmation;
 /**
  * Handles creating records of reward transactions to track contributions made to accounts for dining at restaurants.
  */
+
+
 public interface RewardRepository {
 
 	/**
