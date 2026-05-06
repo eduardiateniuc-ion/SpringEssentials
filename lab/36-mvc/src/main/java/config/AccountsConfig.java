@@ -33,7 +33,7 @@ public class AccountsConfig implements WebMvcConfigurer {
 	 *            <p>
 	 *            At runtime this proxy resolves to the current EntityManager for
 	 *            the current transaction of the current thread.
-	 * @return The new account-manager instance.
+	 * @return The new account-manager instance
 	 */
 	@Bean
 	public AccountManager accountManager() {
