@@ -1,9 +1,13 @@
 package accounts.client;
 
+import accounts.AccountManager;
 import common.money.Percentage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import rewards.internal.account.Account;
@@ -52,11 +56,10 @@ public class AccountClientTests {
 	}
 	
 	@Test
-	@Disabled
 	public void createAccount() {
 		// Use a unique number to avoid conflicts
-		String number = String.format("12345%4d", random.nextInt(10000));
-		Account account = new Account(number, "John Doe");
+        String number = String.format("12345%4d", random.nextInt(10000));
+        Account account = new Account(number, "John Doe");
 		account.addBeneficiary("Jane Doe");
 		
 		//	TODO-08: Create a new Account
@@ -66,12 +69,15 @@ public class AccountClientTests {
 		//  - Note that 'RestTemplate' has two methods for this.
 		//  - Use the one that returns the location of the newly created
 		//    resource and assign that to a variable.
-		URI newAccountLocation = null; // Modify this line to use the restTemplate
+        URI newAccountLocation = restTemplate.postForLocation(
+                BASE_URL + "/accounts",
+                account
+        ); // Modify this line to use the restTemplate
 
 		//	TODO-09: Retrieve the Account you just created from
 		//	         the location that was returned.
 		//	- Run this test, then. Make sure the test succeeds.
-		Account retrievedAccount = null; // Modify this line to use the restTemplate
+		Account retrievedAccount = restTemplate.getForObject(newAccountLocation, Account.class); // Modify this line to use the restTemplate
 		
 		assertEquals(account.getNumber(), retrievedAccount.getNumber());
 		
@@ -81,25 +87,37 @@ public class AccountClientTests {
 		assertEquals(accountBeneficiary.getName(), retrievedAccountBeneficiary.getName());
 		assertNotNull(retrievedAccount.getEntityId());
 	}
-	
+
+
 	@Test
-	@Disabled
 	public void addAndDeleteBeneficiary() {
 		// perform both add and delete to avoid issues with side effects
-		
+
 		// TODO-13: Create a new Beneficiary
 		// - Remove the @Disabled on this test method.
 		// - Create a new Beneficiary called "David" for the account with id 1
 		//	 (POST the String "David" to the "/accounts/{accountId}/beneficiaries" URL).
 		// - Store the returned location URI in a variable.
-		
+
+        URI beneficiaryLocation = restTemplate.postForLocation(
+                BASE_URL + "/accounts/1/beneficiaries",
+                "David"
+        );
+
+
 		// TODO-14: Retrieve the Beneficiary you just created from the location that was returned
-		Beneficiary newBeneficiary = null; // Modify this line to use the restTemplate
-		
-		assertNotNull(newBeneficiary);
+        Beneficiary newBeneficiary = restTemplate.getForObject(
+                beneficiaryLocation,
+                Beneficiary.class
+        );
+
+
+        assertNotNull(newBeneficiary);
 		assertEquals("David", newBeneficiary.getName());
-		
+
 		// TODO-15: Delete the newly created Beneficiary
+
+        restTemplate.delete(beneficiaryLocation);
 
 
 		HttpClientErrorException httpClientErrorException = assertThrows(HttpClientErrorException.class, () -> {
@@ -109,6 +127,11 @@ public class AccountClientTests {
 			// - Run this test, then. It should pass because we expect a 404 Not Found
 			//   If not, it is likely your delete in the previous step
 			//   was not successful.
+
+            restTemplate.getForObject(
+                    beneficiaryLocation,
+                    Beneficiary.class
+            );
 
 		});
 		assertEquals(HttpStatus.NOT_FOUND, httpClientErrorException.getStatusCode());

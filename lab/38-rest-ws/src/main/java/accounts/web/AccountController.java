@@ -8,11 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rewards.internal.account.Account;
 import rewards.internal.account.Beneficiary;
-
+import org.springframework.dao.DataIntegrityViolationException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
+
 
 /**
  * A controller handling requests for CRUD operations on Accounts and their
@@ -66,15 +69,16 @@ public class AccountController {
 	// TODO-06: Complete this method. Add annotations to:
 	// a. Respond to POST /accounts requests
     // b. Use a proper annotation for creating an Account object from the request
-    @PostMapping("/accounts/creatingAccount")
-	public ResponseEntity<Void> createAccount(Account newAccount) {
-		// Saving the account also sets its entity Id
-		Account account = accountManager.save(newAccount);
+    // TODO-06: Complete this method. Add annotations to:
+// a. Respond to POST /accounts requests
+// b. Use a proper annotation for creating an Account object from the request
+    @PostMapping("/accounts")
+    public ResponseEntity<Void> createAccount(@RequestBody Account newAccount) {
 
-		// Return a ResponseEntity - it will be used to build the
-		// HttpServletResponse.
-		return entityWithLocation(account.getEntityId());
-	}
+        Account savedAccount = accountManager.save(newAccount);
+
+        return entityWithLocation(savedAccount.getEntityId());
+    }
 
 	/**
 	 * Return a response with the location of the new resource. 
@@ -84,15 +88,16 @@ public class AccountController {
 	 * Then the URL of the new resource will be
 	 *   http://localhost:8080/accounts/1111.
 	 */
+
+
 	private ResponseEntity<Void> entityWithLocation(Object resourceId) {
 
-		// TODO-07: Set the 'location' header on a Response to URI of
-		//          the newly created resource and return it.
-		// a. You will need to use 'ServletUriComponentsBuilder' and
-		//     'ResponseEntity' to implement this - Use ResponseEntity.created(..)
-		// b. Refer to the POST example in the slides for more information
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(resourceId)
+                .toUri();
 
-		return null; // Return something other than null
+		return ResponseEntity.created(location).build(); // Return something other than null
 	}
 
 	/**
@@ -113,16 +118,16 @@ public class AccountController {
 	// a. Respond to a POST /accounts/{accountId}/beneficiaries
 	// b. Extract a beneficiary name from the incoming request
 	// c. Indicate a "201 Created" status
-	public ResponseEntity<Void> addBeneficiary(long accountId, String beneficiaryName) {
-		
-		// TODO-11: Create a ResponseEntity containing the location of the newly
-		// created beneficiary.
-		// a. Use accountManager's addBeneficiary method to add a beneficiary to an account
-		// b. Use the entityWithLocation method - like we did for createAccount().
-		
-		return null;  // Modify this to return something
-	}
+    @PostMapping("/accounts/{accountId}/beneficiaries")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<Void> addBeneficiary(
+            @PathVariable long accountId,
+            @RequestBody String beneficiaryName) {
 
+        accountManager.addBeneficiary(accountId, beneficiaryName);
+
+        return entityWithLocation(beneficiaryName);
+    }
 	/**
 	 * Removes the Beneficiary with the given name from the Account with the
 	 * given id.
@@ -130,24 +135,36 @@ public class AccountController {
 	// TODO-12: Complete this method by adding the appropriate annotations to:
 	// a. Respond to a DELETE to /accounts/{accountId}/beneficiaries/{beneficiaryName}
 	// b. Indicate a "204 No Content" status
-	public void removeBeneficiary(long accountId, String beneficiaryName) {
-		Account account = accountManager.getAccount(accountId);
-		if (account == null) {
-			throw new IllegalArgumentException("No such account with id " + accountId);
-		}
-		Beneficiary b = account.getBeneficiary(beneficiaryName);
 
-		// We ought to reset the allocation percentages, but for now we won't
-		// bother. If we are removing the only beneficiary or the beneficiary
-		// has an allocation of zero we don't need to worry. Otherwise, throw an
-		// exception.
-		if (account.getBeneficiaries().size() != 1 && (!b.getAllocationPercentage().equals(Percentage.zero()))) {
-			// The solution has the missing logic, if you are interested.
-			throw new RuntimeException("Logic to rebalance Beneficiaries not defined.");
-		}
+    @DeleteMapping("/accounts/{accountId}/beneficiaries/{beneficiaryName}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<Void> removeBeneficiary(
+            @PathVariable long accountId,
+            @PathVariable String beneficiaryName) {
 
-		accountManager.removeBeneficiary(accountId, beneficiaryName, new HashMap<String, Percentage>());
-	}
+        Account account = accountManager.getAccount(accountId);
+
+        if (account == null) {
+            throw new IllegalArgumentException(
+                    "No such account with id " + accountId);
+        }
+
+        Beneficiary b = account.getBeneficiary(beneficiaryName);
+
+        if (account.getBeneficiaries().size() != 1 &&
+                (!b.getAllocationPercentage().equals(Percentage.zero()))) {
+
+            throw new RuntimeException(
+                    "Logic to rebalance Beneficiaries not defined.");
+        }
+
+        accountManager.removeBeneficiary(
+                accountId,
+                beneficiaryName,
+                new HashMap<String, Percentage>());
+
+        return ResponseEntity.noContent().build();
+    }
 
 	/**
 	 * Maps IllegalArgumentExceptions to a 404 Not Found HTTP status code.
@@ -158,6 +175,12 @@ public class AccountController {
 		logger.error("Exception is: ", ex);
 		// just return empty 404
 	}
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler({ DataIntegrityViolationException.class })
+    public void handleConflict(Exception ex) {
+        logger.error("Conflict exception is: ", ex);
+    }
 
 	// TODO-17 (Optional): Add a new exception-handling method
 	// - It should map DataIntegrityViolationException to a 409 Conflict status code.
