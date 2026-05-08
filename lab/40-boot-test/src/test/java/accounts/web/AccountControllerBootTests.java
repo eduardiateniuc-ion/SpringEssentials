@@ -168,14 +168,20 @@ public class AccountControllerBootTests {
     @Test
     public void accountBeneficiaryFail() throws Exception {
 
+        Account account = org.mockito.Mockito.mock(Account.class);
 
-        given(accountManager.getAccount(0L).getBeneficiary("Annabelle")).willThrow(new IllegalArgumentException("No such beneficiary with id " + 0L));
+        given(accountManager.getAccount(0L))
+                .willReturn(account);
+
+        given(account.getBeneficiary("Annabelle"))
+                .willThrow(new IllegalArgumentException(
+                        "No such beneficiary with name 'Annabelle'"));
 
         mockMvc.perform(get("/accounts/0/beneficiaries/Annabelle"))
                 .andExpect(status().isNotFound());
 
-        verify(accountManager).getAccount(0L).getBeneficiary("Annabelle");
-
+        verify(accountManager).getAccount(0L);
+        verify(account).getBeneficiary("Annabelle");
     }
 
 	protected static String asJsonString(final Object obj) {
